@@ -1,30 +1,49 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
-const authRoutes = require("./Routes/user");
+import express from 'express';
+import mongoose from 'mongoose';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import authRoutes from './Routes/auth.js';
 
-require("dotenv").config();
 
-
+dotenv.config();
 
 const app = express();
 
-app.use(cors());
+
+app.use(cors({
+  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  // Only allow requests from our React frontend URL.
+  credentials: true,
+}));
+
 app.use(express.json());
-app.use("/auth", authRoutes);
 
-app.get("/", (req, res) => {
-    res.send("API is running");
-});
 
-// Connect MongoDB
-mongoose.connect(process.env.MONGO_URI)
-.then(() => console.log("MongoDB Connected"))
-.catch(err => console.log(err));
+app.use('/api/auth', authRoutes);
 
-app.listen(5000, () => {
-    console.log("Server running on port 5000");
+
+app.get('/api/health', (req, res) => {
+  res.json({ message: 'AstroGlyph server is running! 🌌' });
 });
 
 
 
+mongoose
+  .connect(process.env.MONGO_URI)
+
+
+  .then(() => {
+    console.log('✅ MongoDB connected');
+    const PORT = process.env.PORT || 5000;
+
+
+    app.listen(PORT, () => {
+
+      console.log(`🚀 Server running on http://localhost:${PORT}`);
+    });
+  })
+
+  .catch((err) => {
+    console.error('❌ MongoDB connection failed:', err.message);
+    process.exit(1);
+  });
